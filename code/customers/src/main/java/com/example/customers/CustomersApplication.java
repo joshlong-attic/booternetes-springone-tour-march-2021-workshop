@@ -36,8 +36,6 @@ class CustomersListener {
 
     @EventListener(ApplicationReadyEvent.class)
     public void ready() {
-
-
         var ddl = dbc.sql(
                 "create table customer( id serial primary key, name varchar(255) not null )")
                 .fetch()
