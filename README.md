@@ -40,10 +40,15 @@ Well need to make changes to the Java code. Here's what it should look  like.
 
 // include: code/customers/src/main/java/com/example/customers/CustomersApplication.java
 
-This application uses reactive programming, which you may note from the `Flux<T>` and `Mono<T>` and `Publisher<T>` types strewn about the codebase. These types are a sort of inverted `Collection<T>` where, instead of pulling data out of the collection to _pull_ the data out of it when you want it, the data is _pushed_ to you when the data is ready. This inverted approach means that Spring Webflux, the reactive web framweokr that we're using, does not need to wait for an asynchronous value of stream of values to resolve. It can ask for it and then carry on doing other work until the results arrive. 
+## Reactive Programming 
+
+This application uses reactive programming, which you may note from the `Flux<T>`, `Mono<T>` and `Publisher<T>` types strewn about the codebase. These types are a sort of inverted `Collection<T>` where, instead of pulling data out of the collection to _pull_ the data out of it when you want it, the data is _pushed_ to you when the data is ready. This inverted approach means that Spring Webflux, the reactive web framweokr that we're using, does not need to wait for an asynchronous value of stream of values to resolve. It can ask for it and then carry on doing other work until the results arrive. This means that no thread is ever parked - _idle_ -  waiting for data to arrive, which means the runtime can repurpose those threads to acheive much better scalability. In the cloud, scalability means less hardware being used to do the same job, which translates into reduced data center spend. Scalability is a _good thing_ (TM). 
+
+Reactive programming also gives us two other major benefits: ease of composition and robustness. You see, reactive programming forces us to think of everything in terms of the Reacttive Streams `Publisher<T>` type or its specializations `Flux<T>` (a container type for `0..N` values of type `T`) and `Mono<T>` (a container type for at-most one value). All reactive Spring APIs use these types. 
+
+The code showcases a number of interetin elemetns. `Customer` is an entity object that maps to data read from the in-memory SQL database, H2. The `CustomerRepository` is a Spring Data repository that allows us to read and write entity data. `CustomersListener` installs some sample data into the database when the application starts up. `CustomerRestController` describes an HTTP endpoint, `/customers`. 
 
 
-* reactive programming 
 * api gateways 
 * reactive orders, customers, gateway
 * gateway lets uss recentalize some crss cutting concerns so that we can with a miniumum of fuss address some of the redudnant concerns for each new microservice 
