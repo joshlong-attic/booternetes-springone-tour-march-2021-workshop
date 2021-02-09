@@ -12,9 +12,41 @@ But theyre not without cost.
 
 In the world of microservices, the rare tedium of addresssing non functional requirements like security, rate limiting, observability, routing, virtual machines and cloud infrastructure become an ongoing struggle that bedevil every new microservice. 
 
-Microservices also introduce a lot of complexity that is implied in building any distributed system. 
+Microservices also introduce a lot of the complexity implied in building any distributed system. Things will fail in production. You'll need a toolkit that supports building responsive, efficient and scalable services. 
 
+In this workshop, you're goign to run through a number of different technologies that let us have our cake and eat it too: you'll embrace microservices, and hopefully make a huge first step in the right direction towards production, and you'll do so in a way that pays down technical debt.
+
+## A Service Chassis 
+<!-- service chassis -->
+Youre going to build three microservices: two APIs and one API gateway. The two APIs will be technically very similar to each other. One microservice, the `customers` application, manages `Customer` data. The other microservice, the `orders` application, manages `Order` data. 
+
+NOTE: There's a strong case to be made that `order` data is part of the `customer` aggregate, but I always  like to imagine that something like an `order` would endure even if the `customer` were to somehow delete their records and orphan the `orders` because of revenue recognition and fiscal reporting requirements. It would make more sense to tombstone the `order`, wouldn't it? This thinking informs why we've teased this domain into two different microservices. 
+
+Through consistency comes velocity. We'll use Spring Boot to code-generate a brand new Java based application with consistent defaults and eaasy-to-override features. Spring Boot is an opinionated approach to the Java ecosystem. You  opt-in to more automatic configuration ("auto-config") by adding so-called "starter" dependencies to the build. The mere presence of these starter dependencies introduces convenient, sensibly defaulted, behvior to an aplication. 
+
+Chris Richardson coined the pattern _microservice chassis_, whihc basically describes an opionated, automatic framework like Spring Boot whose purpose is to reduce cross cutting concersn for each new application. 
+
+
+## The Customer Service 
+
+Let's stand up a simple service to handle `Customer` data.  We can generate a new project on the Spring INitializr. Specify an `Artifact` ID and then be sure to select `Reactive Web`, `Actuator`, `Lombok`, `H2`, and `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+
+We'll need to make changes to the Apache Maven build. Here's what it should look like. 
+
+// include: code/customers/pom.xml 
+
+
+Well need to make changes to the Java code. Here's what it should look  like.
+
+// include: code/customers/src/main/java/com/example/customers/CustomersApplication.java
+
+This application uses reactive programming, which you may note from the `Flux<T>` and `Mono<T>` and `Publisher<T>` types strewn about the codebase. These types are a sort of inverted `Collection<T>` where, instead of pulling data out of the collection to _pull_ the data out of it when you want it, the data is _pushed_ to you when the data is ready. This inverted approach means that Spring Webflux, the reactive web framweokr that we're using, does not need to wait for an asynchronous value of stream of values to resolve. It can ask for it and then carry on doing other work until the results arrive. 
+
+
+* reactive programming 
+* api gateways 
 * reactive orders, customers, gateway
+* gateway lets uss recentalize some crss cutting concerns so that we can with a miniumum of fuss address some of the redudnant concerns for each new microservice 
 * reactive api code and persistence 
 * Actuator & /actuator/metrics 
 * orders, customers, gateway will all use the Wavefront starter (Cora?)
