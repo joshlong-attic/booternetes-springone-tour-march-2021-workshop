@@ -70,9 +70,9 @@ In this example, we're going to create the  `orders` service that synthesizes so
 
 // include: code/orders/pom.xml 
 
-The build is pretty similar to the pom.xml for `customers`. We swap out the `spring-boot-starter-webflux` and replace it with `spring-boot-starter-rsocket`. 
+The build is pretty similar to the pom.xml for `customers` except that it swaps out the `spring-boot-starter-webflux` and replace it with `spring-boot-starter-rsocket`. 
 
-Here's the code: 
+Here's the Java code: 
 
 // include: code/orders/src/main/java/com/example/orders/OrdersApplication.java
 
@@ -90,23 +90,26 @@ Use the [`rsc` CLI](https://github.com/making/rsc) to invoke the `orders.{custom
 rsc tcp://localhost:8181 --stream  -r orders.3 
 ```
 
-
-
 ## Living on the Edge 
 
 At this point we've got two microservices both ready to run. Ensure that they're both running. We're oging to need them running in order to verify that what were about to do next works. 
 
-In this section were going to build an edge service. An edge service is the first port-of-call for requests destined for the downstream endpoints. 
+In this section were going to build an edge service. An edge service is the first port-of-call for requests destined for the downstream endpoints. Its placed in between the outside world and the many clients, and the downstream microservices. This central location makes it an ideal place in which to handle all sorts of requirements. 
 
+An API does not a microservice make. Each microservice has non functional requirements that need to be addressed. Things like routing, comprssion, rate limiting, security, observabvility, etc need to be addressed for each microservice. Spring Boot can handle some of this in the Spring Boot application itself, but even trivial and minimally invasive concerns like rate limiting can become a maintenance burden at scale. An API gateway is a natural place in which to centrally address some of these concerns. 
 
+Well use Spring Cloud Gateway to proxy one endpoint. 
 
-* api gateways 
-* reactive orders, customers, gateway
-* gateway lets uss recentalize some crss cutting concerns so that we can with a miniumum of fuss address some of the redudnant concerns for each new microservice 
-* reactive api code and persistence 
-* Actuator & /actuator/metrics 
-* orders, customers, gateway will all use the Wavefront starter (Cora?)
-* use graalvm native images 
-* use spring-boot:build-image to build a docker image 
-* use docker to tag the image and push it to a docker registry 
-* use kubernetes to then create a deployment with the images and see it scaled
+// todo show spring cloud gateway 
+
+An edge service is also a natural place in which to introduce client translation logic or client specific views. In our example, were going to create a new HTTP endpoint, `/cos`, that returns the materialized view of the combined data from the RSocket `orders.{customerId}` endpoint and the HTTP `/customers` endpoint. We'll use reactive programming to make short of work of the scatter-gather service orchestration and composition. 
+
+// todo show the API adapter code 
+
+## Build Back Buildpacks 
+
+- we have 3 microservices that we need to ge tto the cloud. for most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications 
+- show how to turn the applications into containers using mvn spring-boot:build-image 
+
+## To the Cloud and Beyond!!
+- get the applications to production with some shell scripting and a container registry. 
