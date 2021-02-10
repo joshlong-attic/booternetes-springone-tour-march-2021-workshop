@@ -108,8 +108,10 @@ An edge service is also a natural place in which to introduce client translation
 
 ## Build Back Buildpacks 
 
-- we have 3 microservices that we need to ge tto the cloud. for most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications 
-- show how to turn the applications into containers using mvn spring-boot:build-image 
+Weve got three microserives and we need to get them to the cloud. For most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications. Don't freak out! I didn't say we're going to write `Dockerfile`s, I said that we need to get them into a container. There's a difference. Well use [buildpacks](https://buildpacks.io/) to transform your application source code into images that can run on any cloud. Buildpacks take an opinionated approach to containerizing applications. After all, how many different shapes could your Spring Boot, Django, Vue.js, .NET MVC, or Laravel projects have? Not that many, we'd reckon. A buildpack codifies the recipe for taking arbitrary applications of well known shapes and turning them into a container. It analyzes the source code or source artifact that we give it and then creates a filesystem with sensible  defaults that then gets containerized for us.   A   SPring Boot "fat" `.jar`  will end up with a JDK, sensibly configured memory pools, etc. A client-side Vue.js application might land in an NGinx server on port 80. Whatever the result, you can then take that container and tag it in Docker and then push it to your container registry of choice. 
+
+// show the container registry for all three using GCR but keeping in mind that eduk8s has a custom container registry thing
 
 ## To the Cloud and Beyond!!
-- get the applications to production with some shell scripting and a container registry. 
+
+We've now got three applications deployed as containers. Let's get them runnig! We could craft a ton of YAML and then apply that, but there's not all that much  exciting about our containers, so we'll use a few `kubectl` shhortcuts to get a container up and running in production in no time. The only wrinkle is that our Spring Cloud Gateway application uses two properties to resolve teh hosts and ports of the `order` and `customers` services. Well configure a `ConfigMap` with the resolved hosts and ports of the services. Or will internal DNS work here? Let's find out.
