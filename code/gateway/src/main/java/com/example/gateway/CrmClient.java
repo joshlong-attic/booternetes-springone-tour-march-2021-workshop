@@ -25,27 +25,33 @@ class CrmClient {
 	}
 
 	Flux<CustomerOrders> getCustomerOrders() {
-		return getCustomers()
-			.flatMap(customer ->
-				Mono.zip(Mono.just(customer), getOrdersFor(customer.getId()).collectList())
-			)
-			.map(tuple -> new CustomerOrders(tuple.getT1(), tuple.getT2()));
+		return applySlaDefaults(
+			getCustomers()
+				.flatMap(customer ->
+					Mono.zip(Mono.just(customer), getOrdersFor(customer.getId()).collectList())
+				)
+				.map(tuple -> new CustomerOrders(tuple.getT1(), tuple.getT2()))
+		);
 	}
 
 	Flux<Customer> getCustomers() {
-		return this.webClient
+		return applySlaDefaults(this.webClient
 			.get()
 			.uri(this.customersHostAndPort + "/customers")
 			.retrieve()
-			.bodyToFlux(Customer.class)
-			.onErrorResume(ex -> Flux.empty())
-			.timeout(Duration.ofSeconds(10))
-			.retryWhen(Retry.backoff(10, Duration.ofSeconds(1)));
+			.bodyToFlux(Customer.class));
 	}
 
 	Flux<Order> getOrdersFor(Integer customerId) {
-		return this.rSocketRequester
+		return applySlaDefaults(this.rSocketRequester
 			.route("orders.{customerId}", customerId)
-			.retrieveFlux(Order.class);
+			.retrieveFlux(Order.class));
+	}
+
+	private static <T> Flux<T> applySlaDefaults(Flux<T> tFlux) {
+		return tFlux
+			.onErrorResume(ex -> Flux.empty())
+			.timeout(Duration.ofSeconds(10))
+			.retryWhen(Retry.backoff(10, Duration.ofSeconds(1)));
 	}
 }
