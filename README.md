@@ -309,7 +309,11 @@ For high cardinality data, like individualized requests , distributed tracing is
 
 Both Micrometer and Spring Cloud Sleuth are abstractions that talk to various backends. You might use Micrometer to talk to Wavefront, DataDog, Prometheus, Graphana, etc. You might use Spring Cloud SLeuth to talk to Wavefront, OpenZipkin, Google Cloud Stack Driver Trace, etc. We happen to like VMware's Wavefront because it supports both kinds of data and makes it trivial to cross reference the distrinct kinds of data. 
 
-The builds for all three modules already have Wavefront configured. All we need to do is to 
+The builds for all three modules already have Wavefront configured by virtue of the Wavefront Spring Boot starter that's already on the classpath. And that's it. Look at the logs of one of your applications running on your local machine and youll be given a URL you can click. Copy and paste the URL and paste it into a browser or click it and you'll be dumped into a freemium Wavefront account complete with a `Spring Boot Dashboard` dashboards highlighting data that would be useful coming from a Spring Boot application. Drive a few requests in the application and then wait a few minutes. The first few requests take a while to percolate into the system. They;ll get there. 
+
+The log will conain some Spring Boot properties containing a token. You can preserve that and add it to the properties of all the other applications and all the data from all the microservices will henceforth be sent to the same application. 
+
+You might check out Josh Long, Tanzu Observability Engineering lead Sushant Dewan, and Sr. Product Marketing Manager Gordana Neskovic's webinar on Wavefront [for a more indepth look at using Wavefront and Spring Boot](https://www.brighttalk.com/webcast/14893/413305/tanzu-observability-tips-for-understanding-your-spring-boot-applications). It'll expamnd the picture and illustrate more of the features.
 
 
 ##  Buildpacks 
