@@ -16,7 +16,7 @@ export GATEWAY_PORT=8087
 
 echo $IMAGE_TAG
 
-function deploy() {
+function build_container() {
   MODULE=$1
   cd $START_DIR/../$MODULE
   pwd
@@ -41,38 +41,60 @@ function deploy() {
   docker push ${GCR_IMAGE_NAME}:latest
 }
 
-#deploy orders
-#deploy customers
-#deploy gateway
+function build_containers() {
+  build_container orders
+  build_container customers
+  build_container gateway
+}
 
-## Deploy the Orders Module
-MODULE=orders
-PORT=$ORDER_PORT
-docker run \
-  --env SPRING_RSOCKET_SERVER_PORT=$PORT \
-  -p $PORT:$PORT \
-  --expose $PORT \
-  --rm -d  \
-  gcr.io/bootiful/$MODULE
+function run_in_docker() {
 
-## Deploy the Customers Module
-MODULE=customers
-PORT=$CUSTOMER_PORT
-docker run \
-  --env SERVER_PORT=$PORT \
-  -p $PORT:$PORT \
-  --expose $PORT \
-  --rm -d  \
-  gcr.io/bootiful/$MODULE
+  ## Deploy the Orders Module
+  MODULE=orders
+  PORT=$ORDER_PORT
+  docker run \
+    --env SPRING_RSOCKET_SERVER_PORT=$PORT \
+    -p $PORT:$PORT \
+    --expose $PORT \
+    --rm -d \
+    gcr.io/bootiful/$MODULE
 
-## Deploy the Gateway Module
-MODULE=gateway
-PORT=$GATEWAY_PORT
-docker run \
-  --env SERVER_PORT=$PORT \
-  --env GATEWAY_CUSTOMERS_HOSTNAME_AND_PORT=http://host.docker.internal:$CUSTOMER_PORT \
-  --env GATEWAY_ORDERS_HOSTNAME_AND_PORT=tcp://host.docker.internal:$ORDER_PORT \
-  -p $PORT:$PORT \
-  --expose $PORT \
-  --rm \
-  gcr.io/bootiful/$MODULE
+  ## Deploy the Customers Module
+  MODULE=customers
+  PORT=$CUSTOMER_PORT
+  docker run \
+    --env SERVER_PORT=$PORT \
+    -p $PORT:$PORT \
+    --expose $PORT \
+    --rm -d \
+    gcr.io/bootiful/$MODULE
+
+  ## Deploy the Gateway Module
+  MODULE=gateway
+  PORT=$GATEWAY_PORT
+  docker run \
+    --env SERVER_PORT=$PORT \
+    --env GATEWAY_CUSTOMERS_HOSTNAME_AND_PORT=http://host.docker.internal:$CUSTOMER_PORT \
+    --env GATEWAY_ORDERS_HOSTNAME_AND_PORT=tcp://host.docker.internal:$ORDER_PORT \
+    -p $PORT:$PORT \
+    --expose $PORT \
+    --rm \
+    gcr.io/bootiful/$MODULE
+
+}
+
+function deploy_to_kubernetes() {
+  NS=booternetes
+  kubectl get ns/$NS || kubectl create ns $NS
+  kubectl apply -f ./deploy/  -n $NS
+
+  ## you can test the orders RSocket endpoint
+  ## k port-forward deployments/orders-deployment 8080:8080 -n booternetes
+
+  ## you can test the customers HTTP endpoint
+  ## k port-forward deployments/customers-deployment 8080:8080 -n booternetes
+}
+
+#build_containers
+##run_in_docker
+deploy_to_kubernetes

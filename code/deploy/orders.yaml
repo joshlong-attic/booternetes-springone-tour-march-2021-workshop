@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-deployment
+  labels:
+    app: orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders
+  template:
+    metadata:
+      labels:
+        app: orders
+    spec:
+      containers:
+        - name: orders
+          image: gcr.io/bootiful/orders
+          env:
+            - name: SPRING_RSOCKET_SERVER_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+
