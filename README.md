@@ -161,6 +161,12 @@ There are some things, like the port, and the logical name, that change from one
 // include: code/orders/src/main/resource/application.properties 
 // todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
 
+We want some values to only be active when some condition is met. Were going to use Spring's concept of a profile, a label that - once switched on - could result in some specific configuration being executed or activated. You can use labels to parameterie the runtime environment and execution of the application for different environments (`production`, `staging`, `dev`, etc.). were going to run the `gateway` application with the `SPRING_PROFLES_ACTIVE` environment variable set to `cloud`. Our Spring-based gateway application will start up, see that there's an enviromnt variable signalling that a particlar profile should be active, and will then load all the regular configuration _and_ the profle-specific configuration. In this case, the prfle specific configuration lives in `application-cloud.properties`. 
+
+// include: code/orders/src/main/resource/application-cloud.properties 
+
+
+
 ### Go Time 
 
 Let's test it all out. Go to the root of the `orders` code and run: 
@@ -272,7 +278,7 @@ You should be staring at a face full of JSON containing both your customer data 
 
 <!-- // todo show the API adapter code  -->
 
-## Integrating the Spring Boot Actuator and Wavefront 
+## Integrating Observability with the Spring Boot Actuator Module  and Wavefront 
 
 <!-- 
     make sure that they add the following properties to each microservice: 
@@ -328,16 +334,39 @@ Well use [buildpacks](https://buildpacks.io/) to transform your application sour
 
 We've now got three applications deployed as containers. Let's get them runnig! We could craft a ton of YAML and then apply that, but there's not all that much  exciting about our containers, so we'll use a few `kubectl` shhortcuts to get a container up and running in production in no time. The only wrinkle is that our Spring Cloud Gateway application uses two properties to resolve teh hosts and ports of the `order` and `customers` services. Well configure a `ConfigMap` with the resolved hosts and ports of the services. Or will internal DNS work here? Let's find out.
 
-<!--  
-    
-    we need to deploy eachof the kubernetes services to the container registry then create deployments and services for each of the microservices.
-    
-    customers
-    orders
-    gateway
+Weve written a shell script that in turns executes everything required to deploy this application to prodction 
 
-    - we need to be mindful of the port on which these applications run and map them to the right one
-    - we need to provide some configuration as a configmap for the gateway URLs for orders/customers
-    - we need to configure the liveness and readiness probes in Kubernetes.
- -->
+// include: code/deploy/deploy.sh 
+
+This in turn applies three different Kubernetes configuration files, `customers.yaml`, `orders.yaml`, an `gateway.yaml`. 
+
+Here are those files. First, the `orders` service.
+
+// include: code/deploy/orders.yaml
+
+and then the `customers` service. 
+
+// include: code/deploy/customers.yaml
+
+and then finally the `gateway` code 
+
+// include: code/deploy/customers.yaml
+
+You need to execute `deploy.sh` to get everything installd into a Kubernetes intance. 
+
+```shell 
+./deploys.sh 
+```
+
+You should be able to run the folloowing incantatin to see what all resources have just been created. remember the script crates or assues the availability of a namespace called `booternetes`.
+
+```shell
+kubectl get all -n booternetes 
+```
+
+You can see what all has been perhaps erroneously added to your Kubernetes cluster with that command. We're interest in the IP address of the `gateway` code. Insepect the `EXTERNAL_IP` value present fir the `gateway` module in the output . Enter that into your browser followed by `/cos` and ou should get the results from both the `orders` and `customers` service.
+
+
+
+
 
