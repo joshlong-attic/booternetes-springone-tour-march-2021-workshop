@@ -30,7 +30,7 @@ kind: Service
 metadata:
   name: customers-service
 spec:
-  type: LoadBalancer
+#  type: LoadBalancer
   selector:
     app: customers
   ports:

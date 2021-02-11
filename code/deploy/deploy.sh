@@ -86,7 +86,12 @@ function run_in_docker() {
 function deploy_to_kubernetes() {
   NS=booternetes
   kubectl get ns/$NS || kubectl create ns $NS
-  kubectl apply -f ./deploy/  -n $NS
+
+  kubectl delete deployments/customers-deployment -n $NS
+  kubectl delete deployments/orders-deployment -n $NS
+  kubectl delete deployments/gateway-deployment -n $NS
+
+  kubectl apply -f ${START_DIR} -n $NS
 
   ## you can test the orders RSocket endpoint
   ## k port-forward deployments/orders-deployment 8080:8080 -n booternetes

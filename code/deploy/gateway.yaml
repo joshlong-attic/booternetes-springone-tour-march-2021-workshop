@@ -1,39 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orders-deployment
+  name: gateway-deployment
   labels:
-    app: orders
+    app: gateway
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: orders
+      app: gateway
   template:
     metadata:
       labels:
-        app: orders
+        app: gateway
     spec:
       containers:
-        - name: orders
-          image: gcr.io/bootiful/orders
+        - name: gateway
+          image: gcr.io/bootiful/gateway
           env:
-            - name: SPRING_RSOCKET_SERVER_PORT
+            - name: SPRING_PROFILES_ACTIVE
+              value: "cloud"
+            - name: SERVER_PORT
               value: "8080"
           ports:
             - containerPort: 8080
-              hostPort: 8080
-
+              hostPort: 80
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: orders-service
+  name: gateway-service
 spec:
-  #  type: LoadBalancer
+  type: LoadBalancer
   selector:
-    app: orders
+    app: gateway
   ports:
     - port: 80
       targetPort: 8080
