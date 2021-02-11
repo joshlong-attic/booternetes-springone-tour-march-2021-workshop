@@ -1,6 +1,6 @@
 package com.example.gateway;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -11,34 +11,41 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 
 @Component
-@RequiredArgsConstructor
 class CrmClient {
 
-    private final WebClient webClient;
-    private final RSocketRequester rSocketRequester;
+	private final WebClient webClient;
+	private final RSocketRequester rSocketRequester;
+	private final String customersHostAndPort;
 
-    Flux<CustomerOrders> getCustomerOrders() {
-        return getCustomers()
-                .flatMap(customer ->
-                        Mono.zip(Mono.just(customer), getOrdersFor(customer.getId()).collectList())
-                )
-                .map(tuple -> new CustomerOrders(tuple.getT1(), tuple.getT2()));
-    }
+	CrmClient(@Value("${gateway.customers.hostname-and-port}") String customersHostAndPort,
+											WebClient webClient, RSocketRequester rSocketRequester) {
+		this.webClient = webClient;
+		this.rSocketRequester = rSocketRequester;
+		this.customersHostAndPort = customersHostAndPort;
+	}
 
-    Flux<Customer> getCustomers() {
-        return this.webClient
-                .get()
-                .uri("http://localhost:8080/customers")
-                .retrieve()
-                .bodyToFlux(Customer.class)
-                .onErrorResume(ex -> Flux.empty())
-                .timeout(Duration.ofSeconds(10))
-                .retryWhen(Retry.backoff(10, Duration.ofSeconds(1)));
-    }
+	Flux<CustomerOrders> getCustomerOrders() {
+		return getCustomers()
+			.flatMap(customer ->
+				Mono.zip(Mono.just(customer), getOrdersFor(customer.getId()).collectList())
+			)
+			.map(tuple -> new CustomerOrders(tuple.getT1(), tuple.getT2()));
+	}
 
-    Flux<Order> getOrdersFor(Integer customerId) {
-        return this.rSocketRequester
-                .route("orders.{customerId}", customerId)
-                .retrieveFlux(Order.class);
-    }
+	Flux<Customer> getCustomers() {
+		return this.webClient
+			.get()
+			.uri(this.customersHostAndPort + "/customers")
+			.retrieve()
+			.bodyToFlux(Customer.class)
+			.onErrorResume(ex -> Flux.empty())
+			.timeout(Duration.ofSeconds(10))
+			.retryWhen(Retry.backoff(10, Duration.ofSeconds(1)));
+	}
+
+	Flux<Order> getOrdersFor(Integer customerId) {
+		return this.rSocketRequester
+			.route("orders.{customerId}", customerId)
+			.retrieveFlux(Order.class);
+	}
 }

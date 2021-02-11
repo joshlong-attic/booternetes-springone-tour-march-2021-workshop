@@ -1,6 +1,6 @@
 # The Cloud Native Java Workshop for SpringOne Tour 2021 
 
-> I do not like work even when someone else is doing it.  ―Mark Twain
+> I do not like work even when someone else is doing it. ― Mark Twain
 
 We're with Mr. Twain on this one. we loathe work, especially undifferentiated work - work that you have to do but that doesn't directly contribute to the success of your project, but getting to production today means doing more of it than ever. 
 
@@ -28,15 +28,56 @@ Chris Richardson coined the pattern _microservice chassis_, whihc basically desc
 
 ## The Customer Service 
 
-Let's stand up a simple service to handle `Customer` data.  We can generate a new project on the Spring INitializr. Specify an `Artifact` ID and then be sure to select `Reactive Web`, `Actuator`, `Lombok`, `H2`, and `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+Let's stand up a simple service to handle `Customer` data.  
+
+### The Build
+
+
+We can generate a new project on the Spring INitializr. Specify an `Artifact ID` (`customers`, perhaps?) and then be sure to select `R2DBC`, `Wavefront`, `Reactive Web`, `Actuator`, `Lombok`, `H2`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+
+<!-- i wasnt sure about this part. normally id direct people to start.spring.io and have them incept the project there. but i guess in this case were giving them a prepopulated git directory? so maybe this next few paragraphs are more viable than the last one? -->
 
 We'll need to make changes to the Apache Maven build. Here's what it should look like. 
 
-// include: code/customers/pom.xml 
+// include: code/orders/pom.xml 
 
-We'll need to make changes to the Java code. Here's what it should look like.
+Note that this build includes dependencies for   `R2DBC`, the  `Wavefront` observability platform, `Reactive Web`, `Actuator`, `Lombok`, the `H2`, and `Java 11`.
 
-// include: code/customers/src/main/java/com/example/customers/CustomersApplication.java
+
+
+
+### The Java Code 
+
+We'll need to make changes to the Java code. There are a few interesting players here. 
+
+The application is a Spring Boot application, so well need the entry point class.
+
+// include: code/orders/src/main/java/com/example/orders/OrdersApplication.java
+
+We're going to read and write data to a sQL database table called `orders`. We'll need an entity class.
+
+// include: code/orders/src/main/java/com/example/orders/Order.java
+
+And we'll need a Spring Data repository.
+
+// include: code/orders/src/main/java/com/example/orders/OrderRepository.java
+
+We're going to read and write data to a sQL database table called `orders`. The H2 SQL database is an embedded, inmemory SQL database that will lose all of its state on every restart.  We'll need to initialize it. 
+
+// include: code/customers/src/main/java/com/example/customers/CustomersListener.java
+
+And, fianlly, we want to export an HTTP endpooint, `/customers`. 
+
+// include: code/customers/src/main/java/com/example/customers/CustomersRestController.java
+
+### The Configuration 
+
+There are some things, like the port, and the logical name, that change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
+
+// include: code/customers/src/main/resource/application.properties 
+// todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
+
+### Go Time 
 
 Let's test it all out. Go to the root of the `custoemrs` code and run: 
 
@@ -64,19 +105,63 @@ All the code that we'll look at today assumes the use of Reactive Applications.
 
 We love HTTP, broadly, and the REST constraint on HTTP, specifically, as much as the next cloud native, but it's definitely not the only game in town when it comes to high speed, low-latency, highly scalable, intraservice communication. There are, among many alternatives like GraphQL, GRPC, and - our perennial favorite - RSocket. RSocket is a binary protocol that reifies the concepts of Reactive Streams in the wire protocol. RSocket  understands supports key components of reactive programming, including _backpressure_, and has ways to communicate that information on the wire itself. The protocol is of course platofmr, language and payload agnostic. There is a fantasic Java client, written on top of the Reative Streams specification and Project Reactor, that we could use independent of Spring, if we were so inclined. But, as luck woud have it, spring already integrates RSocket and provides a component model that makes trivial the work of standing up an Rsovket based service. 
 
+
+
+
+
+
 ## The Orders Service 
 
-In this example, we're going to create the  `orders` service that synthesizes some dummy data for orders belonging to individual customers and serves it up over RSocket. Here's the build. 
+
+Let's stand up a simple service to handle `Order` data.  
+
+<!-- should we include the discusion around the bounded-ness of the order data to the customer aggregate? -->
+
+### The Build
+
+We can generate a new project on the Spring INitializr. Specify an `Artifact ID`  (`orders`, perhaps?) and then be sure to select `R2DBC`, `Wavefront`, `RSocket`, `Actuator`, `Lombok`, `H2`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+
+<!-- i wasnt sure about this part. normally id direct people to start.spring.io and have them incept the project there. but i guess in this case were giving them a prepopulated git directory? so maybe this next few paragraphs are more viable than the last one? -->
+
+We'll need to make changes to the Apache Maven build. Here's what it should look like. 
 
 // include: code/orders/pom.xml 
 
-The build is pretty similar to the pom.xml for `customers` except that it swaps out the `spring-boot-starter-webflux` and replace it with `spring-boot-starter-rsocket`. 
+Note that this build includes dependencies for   `R2DBC`, the `Wavefront` observability platform, `RSocket`, `Actuator`, `Lombok`,   `H2`, and `Java 11`. 
 
-Here's the Java code: 
+### The Java Code 
+
+We'll need to make changes to the Java code. There are a few interesting players here. 
+
+The application is a Spring Boot application, so well need the entry point class.
 
 // include: code/orders/src/main/java/com/example/orders/OrdersApplication.java
 
-This code is virtually identical to the `customers` service _except_ that instead of using `@RestController`, we're using `@Controller`, and instead of mounting an controller handler method to handle HTTP `GET` requests to the route `/customers`, we mount a controller handler method to handle RSocket requests to a route, `orders.{customerId}`. 
+
+We're going to read and write data to a sQL database table called `orders`. We'll need an entity class.
+
+// include: code/orders/src/main/java/com/example/orders/Order.java
+
+And we'll need a Spring Data repository.
+
+// include: code/orders/src/main/java/com/example/orders/OrderRepository.java
+
+We're going to read and write data to a sQL database table called `orders`. The H2 SQL database is an embedded, inmemory SQL database that will lose all of its state on every restart. We'll need to initialize it. 
+
+// include: code/orders/src/main/java/com/example/orders/OrdersListener.java
+
+And, fianlly, we want to export an HTTP endpooint, `/orders`. 
+
+// include: code/orders/src/main/java/com/example/orders/OrdersRestController.java
+
+### The Configuration 
+
+There are some things, like the port, and the logical name, that change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
+
+// include: code/orders/src/main/resource/application.properties 
+// todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
+
+### Go Time 
 
 Let's test it all out. Go to the root of the `orders` code and run: 
 
@@ -92,23 +177,108 @@ rsc tcp://localhost:8181 --stream  -r orders.3
 
 ## Living on the Edge 
 
-At this point we've got two microservices both ready to run. Ensure that they're both running. We're oging to need them running in order to verify that what were about to do next works. 
+At this point we've got two microservices both ready to run. Ensure that they're both running. We're oging to need them running in order to verify that what we're about to do next will work. 
 
 In this section were going to build an edge service. An edge service is the first port-of-call for requests destined for the downstream endpoints. Its placed in between the outside world and the many clients, and the downstream microservices. This central location makes it an ideal place in which to handle all sorts of requirements. 
 
 An API does not a microservice make. Each microservice has non functional requirements that need to be addressed. Things like routing, comprssion, rate limiting, security, observabvility, etc need to be addressed for each microservice. Spring Boot can handle some of this in the Spring Boot application itself, but even trivial and minimally invasive concerns like rate limiting can become a maintenance burden at scale. An API gateway is a natural place in which to centrally address some of these concerns. 
 
-Well use Spring Cloud Gateway to proxy one endpoint. 
 
-// todo show spring cloud gateway 
+Let's stand up a simple edge service that is part API adapter and part API gateway.
+
+### The Build
+
+We can generate a new project on the Spring Initializr. Specify an `Artifact ID`  (`gateway`, perhaps?) and then be sure to select `Wavefront`, `RSocket`, `Reactive Web`, `Gateway`, `Actuator`, `Lombok`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+
+<!-- i wasnt sure about this part. normally id direct people to start.spring.io and have them incept the project there. but i guess in this case were giving them a prepopulated git directory? so maybe this next few paragraphs are more viable than the last one? -->
+
+We'll need to make changes to the Apache Maven build. Here's what it should look like. 
+
+// include: code/orders/pom.xml 
+
+Note that this build includes dependencies for the `Wavefront` observability platform, `RSocket`, `Actuator`, `Lombok`,  `Reactive Web` and `Java 11`.
+
+### The Java Code 
+
+We'll need to make changes to the Java code. There are a few interesting players here. 
+
+The application is a Spring Boot application, so well need the entry point class.
+
+// include: code/gateway/src/main/java/com/example/gateway/GatewayApplication.java
+
+The gateway will connect to the HTTP and RSocket endpoints and itll be conveient to manipulate the responses in terms of the same types that were used to create the responses. So, for the purposes of thie demonstration, well recreate the entities in the `customers` and `orders` modules as data transfer objects (DTOs) in this codebase.
+
+Here's the `Order`: 
+
+// include: code/gateway/src/main/java/com/example/gateway/Order.java
+
+And here's the `Customer`: 
+
+// include: code/gateway/src/main/java/com/example/gateway/Customer.java
+
+
+Let's first look at building an API gateway. We'll use Spring Cloud Gateway to proxy one endpoint and forward requests onward to a downstream endpoint. SPring Cloud Gateways contract is simple: given a bean of type `RouteLocator`, Spring Cloud Gateway will create routes that match requests coming in from the outside, optionally process them in some way, and then forward those  requests onward. 
+
+Yoyu can factory those `Route` instances in a number of different ways. Here, we're going to use the convenient `RouteLocatorBuilder` DSL. 
+
+// include: code/gateway/src/main/java/com/example/gateway/ApiGatewayConfiguration.java
+
+this class defines one route that matches any request headed to the host and port of the gateway (e.g,: `http://localhost:9999/`), having a path of `/c`, forwards the requests on to the downstream `customers` service (running on `localhost:8080`) 
+
+And here's the `Customer`: 
+
+// include: code/gateway/src/main/java/com/example/gateway/Customer.java
 
 An edge service is also a natural place in which to introduce client translation logic or client specific views. In our example, were going to create a new HTTP endpoint, `/cos`, that returns the materialized view of the combined data from the RSocket `orders.{customerId}` endpoint and the HTTP `/customers` endpoint. We'll use reactive programming to make short of work of the scatter-gather service orchestration and composition. 
 
+ 
+### The Configuration 
+
+There are some things, like the port, and the logical name, that change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
+
+// include: code/orders/src/main/resource/application.properties 
+// todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
+
+### Go Time 
+
+Let's test it all out. Go to the root of the `orders` code and run: 
+
+```shell
+mvn clean spring-boot:run 
+```
+
+Use the [`rsc` CLI](https://github.com/making/rsc) to invoke the `orders.{customerId}` RSocket endpoint.
+
+```shell
+rsc tcp://localhost:8181 --stream  -r orders.3 
+```
+
+
+
+
+
 // todo show the API adapter code 
 
-## Build Back Buildpacks 
+## Integrating the Spring Boot Actuator and Wavefront 
 
-Weve got three microserives and we need to get them to the cloud. For most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications. Don't freak out! I didn't say we're going to write `Dockerfile`s, I said that we need to get them into a container. There's a difference. Well use [buildpacks](https://buildpacks.io/) to transform your application source code into images that can run on any cloud. Buildpacks take an opinionated approach to containerizing applications. After all, how many different shapes could your Spring Boot, Django, Vue.js, .NET MVC, or Laravel projects have? Not that many, we'd reckon. A buildpack codifies the recipe for taking arbitrary applications of well known shapes and turning them into a container. It analyzes the source code or source artifact that we give it and then creates a filesystem with sensible  defaults that then gets containerized for us.   A   SPring Boot "fat" `.jar`  will end up with a JDK, sensibly configured memory pools, etc. A client-side Vue.js application might land in an NGinx server on port 80. Whatever the result, you can then take that container and tag it in Docker and then push it to your container registry of choice. 
+<!-- 
+    make sure that they add the following properties to each microservice: 
+
+    spring.application.name=customers
+    management.endpoints.web.exposure.include=*
+    management.endpoint.health.probes.enabled=true
+    management.endpoint.health.show-details=always
+
+    make sure that theyre aware that they have Wavefront installed. they can click the link on the console and see reflected in the console information automatically gathered about their application usage
+
+    todo does the RSocket endpoint register metrics with Actuator like the HTTP endpoint does? i should check that out 
+ -->
+
+##  Buildpacks 
+
+Weve got three microserives and we need to get them to the cloud. For most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications. Don't freak out! I didn't say we're going to write `Dockerfile`s, I said that we need to get them into a container. _There's a difference_. 
+
+Well use [buildpacks](https://buildpacks.io/) to transform your application source code into images that can run on any cloud. Buildpacks take an opinionated approach to containerizing applications. After all, how many different shapes could your Spring Boot, Django, Vue.js, .NET MVC, or Laravel projects have? How many different shapes does any app have, really? In java there are `.war` and `.jar` artifacts.  So, not that many, we'd reckon. A buildpack codifies the recipe for taking arbitrary applications of well-known shapes and turning them into a container. It analyzes the source code or source artifact that we give it and then creates a filesystem with sensible defaults that then gets containerized for us. A Spring Boot "fat" `.jar` will end up with a JDK, sensibly configured memory pools, etc. A client-side Vue.js application might land in an Nginx server on port 80. Whatever the result, you can then take that container and tag it in Docker and then push it to your container registry of choice. So, let's. 
 
 // show the container registry for all three using GCR but keeping in mind that eduk8s has a custom container registry thing
 
