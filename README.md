@@ -318,7 +318,7 @@ Weve got three microserives and we need to get them to the cloud. For most folks
 
 Well use [buildpacks](https://buildpacks.io/) to transform your application source code into images that can run on any cloud. Buildpacks take an opinionated approach to containerizing applications. After all, how many different shapes could your Spring Boot, Django, Vue.js, .NET MVC, or Laravel projects have? How many different shapes does any app have, really? In java there are `.war` and `.jar` artifacts.  So, not that many, we'd reckon. A buildpack codifies the recipe for taking arbitrary applications of well-known shapes and turning them into a container. It analyzes the source code or source artifact that we give it and then creates a filesystem with sensible defaults that then gets containerized for us. A Spring Boot "fat" `.jar` will end up with a JDK, sensibly configured memory pools, etc. A client-side Vue.js application might land in an Nginx server on port 80. Whatever the result, you can then take that container and tag it in Docker and then push it to your container registry of choice. So, let's. 
 
-// show the container registry for all three using GCR but keeping in mind that eduk8s has a custom container registry thing
+// todo show the container registry for all three using GCR but keeping in mind that eduk8s has a custom container registry thing
 
 ## To the Cloud and Beyond!!
 
@@ -337,4 +337,3 @@ We've now got three applications deployed as containers. Let's get them runnig! 
     - we need to configure the liveness and readiness probes in Kubernetes.
  -->
 
- 
