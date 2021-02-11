@@ -12,7 +12,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 class Order {
 
-    @Id
-    private Integer id;
-    private Integer customerId;
+	@Id
+	private Integer id;
+	private Integer customerId;
 }

@@ -11,6 +11,6 @@ import java.util.Collection;
 @NoArgsConstructor
 class CustomerOrders {
 
-    private Customer customer;
-    private Collection<Order> orders;
+	private Customer customer;
+	private Collection<Order> orders;
 }

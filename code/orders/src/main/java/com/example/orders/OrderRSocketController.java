@@ -10,10 +10,10 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 class OrderRSocketController {
 
-    private final OrderRepository orderRepository;
+	private final OrderRepository orderRepository;
 
-    @MessageMapping("orders.{customerId}")
-    Flux<Order> getByCustomerId(@DestinationVariable Integer customerId) {
-        return this.orderRepository.findByCustomerId(customerId);
-    }
+	@MessageMapping("orders.{customerId}")
+	Flux<Order> getByCustomerId(@DestinationVariable Integer customerId) {
+		return this.orderRepository.findByCustomerId(customerId);
+	}
 }

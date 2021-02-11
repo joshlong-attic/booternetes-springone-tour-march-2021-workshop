@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 class Customer {
-    private Integer id;
-    private String name;
+	private Integer id;
+	private String name;
 }

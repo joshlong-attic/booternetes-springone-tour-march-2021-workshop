@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 class Order {
-    private Integer id;
-    private Integer customerId;
+	private Integer id;
+	private Integer customerId;
 }

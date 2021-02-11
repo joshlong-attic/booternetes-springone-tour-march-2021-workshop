@@ -9,10 +9,10 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 class CustomerOrdersRestController {
 
-    private final CrmClient crmClient;
+	private final CrmClient crmClient;
 
-    @GetMapping("/cos")
-    Flux<CustomerOrders> get() {
-        return this.crmClient.getCustomerOrders();
-    }
+	@GetMapping("/cos")
+	Flux<CustomerOrders> get() {
+		return this.crmClient.getCustomerOrders();
+	}
 }

@@ -14,29 +14,29 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 class OrdersListener {
 
-    private final OrderRepository orderRepository;
-    private final DatabaseClient dbc;
+	private final OrderRepository orderRepository;
+	private final DatabaseClient dbc;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void ready() {
+	@EventListener(ApplicationReadyEvent.class)
+	public void ready() {
 
-        var ddl = dbc
-                .sql("create table orders (id serial primary  key , customer_id int not null)")
-                .fetch()
-                .rowsUpdated();
-        var orders = Flux
-                .fromStream(IntStream.range(1, 11).boxed())
-                .flatMap(this::synthesizeFor)
-                .flatMap(orderRepository::save);
+		var ddl = dbc
+			.sql("create table orders (id serial primary  key , customer_id int not null)")
+			.fetch()
+			.rowsUpdated();
+		var orders = Flux
+			.fromStream(IntStream.range(1, 11).boxed())
+			.flatMap(this::synthesizeFor)
+			.flatMap(orderRepository::save);
 
-        ddl.thenMany(orders).thenMany(orderRepository.findAll()).subscribe(System.out::println);
+		ddl.thenMany(orders).thenMany(orderRepository.findAll()).subscribe(System.out::println);
 
-    }
+	}
 
-    private Flux<Order> synthesizeFor(Integer customerId) {
-        var collection = new ArrayList<Order>();
-        for (var i = 0; i < (Math.random() * 10); i++)
-            collection.add(new Order(null, customerId));
-        return Flux.fromIterable(collection);
-    }
+	private Flux<Order> synthesizeFor(Integer customerId) {
+		var collection = new ArrayList<Order>();
+		for (var i = 0; i < (Math.random() * 10); i++)
+			collection.add(new Order(null, customerId));
+		return Flux.fromIterable(collection);
+	}
 }
