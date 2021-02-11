@@ -2,11 +2,11 @@
 
 > I do not like work even when someone else is doing it. ― Mark Twain
 
-We're with Mr. Twain on this one. we loathe work, especially undifferentiated work - work that you have to do but that doesn't directly contribute to the success of your project, but getting to production today means doing more of it than ever. 
+We're with Mr. Twain on this one. We loathe work, especially undifferentiated work. Work that you have to do but that doesn't directly contribute to your project's success, but getting to production today means doing more of it than ever. 
 
-Cloud native computing refers not to any one single technology but more to an approach that optimizes for frequent and fast releases and speed of iteration. Microservices are a part of a broad continiium of technical approaches that, taken together, improve an organization's ability to release new software consistently and frequently. 
+Cloud-native computing refers not to anyone single technology but more to an approach that optimizes frequent and fast releases and the speed of iteration. Microservices are a part of a broad continuum of technical procedures that, taken together, improve an organization's ability to release new software consistently and frequently. 
 
-Microservices are all about optimizing for release velocity. The faster an organization's velocity the faster it can get working software into the hands of its users where it may delight them. the faster an organization;s velocity the faster it can learn from the experience and  improve in response. There are lots of work queues for each new release to production - things that must be done and that take wall clock take time. Some things - like integration and integration testing -  must be done in a serialized fashion, after all contributions have been made to a codebase, while other things may be done in parallel. The smaller the size of the codebase, the more quickly all the serialized work may be finished. The goal is to do as much work in parallel and to reduce the amount of serialized work, to reduce wall clock time between releases. Imrove these two things  - parallel and serial work -  and the wall time from concept to customer decreases significantly. It's no wonder microservices are popular! _Vroom vroom_.
+Microservices are all about optimizing for release velocity. The faster an organization's velocity, the faster it can get working software into its users' hands where it may delight them. The quicker an organization's velocity, the quicker it can learn from the experience and improve response. There are many work queues for each new production release - things that must be done and take wall-clock take time. Some things - like integration and integration testing -  must be done in a serialized fashion, after all contributions have been made to a codebase. At the same time, other things may be done in parallel. The smaller the size of the codebase, the more quickly all the serialized work may be finished. The goal is to do as much work in parallel and to reduce the amount of serialized work, to reduce wall clock time between releases. Imrove these two things  - parallel and serial work -  and the wall time from concept to customer decreases significantly. It's no wonder microservices are popular! _Vroom vroom_.
 
 But theyre not without cost. 
 
@@ -62,7 +62,7 @@ And we'll need a Spring Data repository.
 
 // include: code/orders/src/main/java/com/example/orders/OrderRepository.java
 
-We're going to read and write data to a sQL database table called `orders`. The H2 SQL database is an embedded, inmemory SQL database that will lose all of its state on every restart.  We'll need to initialize it. 
+We're going to read and write data to a sQL database table called `orders`. The H2 SQL database is an embedded, inmemory SQL database that will lose all of its state on every restart. We'll need to initialize it. 
 
 // include: code/customers/src/main/java/com/example/customers/CustomersListener.java
 
@@ -81,13 +81,13 @@ There are some things, like the port, and the logical name, that change from one
 
 Let's test it all out. Go to the root of the `custoemrs` code and run: 
 
-```shell
+"`shell
 mvn clean spring-boot:run 
 ```
 
 Use the `curl` CLI to invoke the `/customers` HTTP endpoint. 
 
-```shell
+"`shell
 curl http://localhost:8080/customers
 ```
 
@@ -171,7 +171,7 @@ We want some values to only be active when some condition is met. Were going to 
 
 Let's test it all out. Go to the root of the `orders` code and run: 
 
-```shell
+"`shell
 mvn clean spring-boot:run 
 ```
 
@@ -264,13 +264,13 @@ There are some things, like the port, and the logical name for the `orders` and 
 
 Let's test it all out. Go to the root of the `gateway` code and run: 
 
-```shell
+"`shell
 mvn clean spring-boot:run 
 ```
 
 Use the  `curl` CLI  to invoke the `/cos` HTTP endpoint.
 
-```shell
+"`shell
 curl http://localhost:9999/cos 
 ```
 
@@ -324,7 +324,7 @@ You might check out Josh Long, Tanzu Observability Engineering lead Sushant Dewa
 
 ##  Buildpacks 
 
-Weve got three microserives and we need to get them to the cloud. For most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications. Don't freak out! I didn't say we're going to write `Dockerfile`s, I said that we need to get them into a container. _There's a difference_. 
+Weve got three microserives and we need to get them to the cloud. For most folks, and certainly anybody reading this eduk8s course, that means containers and Kubernetes. So, well need containerized versions of each of our applications. Don't freak out! I didn't say we're going to write `Dockerfile's, I said that we need to get them into a container. _ There's a difference_. 
 
 Well use [buildpacks](https://buildpacks.io/) to transform your application source code into images that can run on any cloud. Buildpacks take an opinionated approach to containerizing applications. After all, how many different shapes could your Spring Boot, Django, Vue.js, .NET MVC, or Laravel projects have? How many different shapes does any app have, really? In java there are `.war` and `.jar` artifacts.  So, not that many, we'd reckon. A buildpack codifies the recipe for taking arbitrary applications of well-known shapes and turning them into a container. It analyzes the source code or source artifact that we give it and then creates a filesystem with sensible defaults that then gets containerized for us. A Spring Boot "fat" `.jar` will end up with a JDK, sensibly configured memory pools, etc. A client-side Vue.js application might land in an Nginx server on port 80. Whatever the result, you can then take that container and tag it in Docker and then push it to your container registry of choice. So, let's. 
 
@@ -360,11 +360,15 @@ You need to execute `deploy.sh` to get everything installd into a Kubernetes int
 
 You should be able to run the folloowing incantatin to see what all resources have just been created. remember the script crates or assues the availability of a namespace called `booternetes`.
 
-```shell
+"`shell
 kubectl get all -n booternetes 
 ```
 
 You can see what all has been perhaps erroneously added to your Kubernetes cluster with that command. We're interest in the IP address of the `gateway` code. Insepect the `EXTERNAL_IP` value present fir the `gateway` module in the output . Enter that into your browser followed by `/cos` and ou should get the results from both the `orders` and `customers` service.
+
+
+## Next Steps
+
 
 
 
