@@ -2,19 +2,15 @@
 
 > I do not like work even when someone else is doing it. ― Mark Twain
 
-We're with Mr. Twain on this one. We loathe work, especially undifferentiated work. Work that you have to do but that doesn't directly contribute to your project's success, but getting to production today means doing more of it than ever. 
+We're with Mr. Twain on this one. We loathe work, especially undifferentiated work.  Work that you have to do but that doesn't directly contribute to your project's success is undifferentiated work, and getting to production today means doing more of it than ever. 
 
-Cloud-native computing refers not to anyone single technology but more to an approach that optimizes frequent and fast releases and the speed of iteration. Microservices are a part of a broad continuum of technical procedures that, taken together, improve an organization's ability to release new software consistently and frequently. 
+When we talk about _cloud native computing_, it refers not to any single technology but more to an approach that optimizes for frequent and fast releases, and the speed of iteration, and release. Faster organizations learn and grow faster. There are many work queues for each new production release, which must be done and take wall-clock time. Some things like integration and integration testing must happen serially, after all the contributions to the codebase settle. At the same time, a team may do other items in parallel. The smaller the size of the codebase, the more quickly all the serialized work finishes. The goal is to do as much work in parallel and reduce the amount of serialized work, to reduce wall clock time between releases.  
 
-Microservices are all about optimizing for release velocity. The faster an organization's velocity, the faster it can get working software into its users' hands where it may delight them. The quicker an organization's velocity, the quicker it can learn from the experience and improve response. There are many work queues for each new production release, which must be done and take wall-clock time. Like integration and integration testing, some things must happen serially, after all, contributions to the codebase. At the same time, a team may do other items in parallel. The smaller the size of the codebase, the more quickly all the serialized work finishes. The goal is to do as much work in parallel and reduce the amount of serialized work, to reduce wall clock time between releases. Improve these two things  - parallel and serial work -  and the wall time from concept to customer decreases significantly. It's no wonder microservices are popular!  _Vroom vroom_.
+Microservices are not without costs. 
 
-But they're not without cost. 
+In the world of microservices, the rare work  (tedium!) of addressing non-functional requirements like security, rate limiting, observability, routing, containers, virtual machines, and cloud infrastructure has become an ongoing struggle that bedevils every new microservice. 
 
-In the world of microservices, the rare tedium of addressing non-functional requirements like security, rate limiting, observability, routing, virtual machines, and cloud infrastructure has become an ongoing struggle that bedevils every new microservice. 
-
-Microservices also introduce a lot of the complexity implied in building any distributed system. Things will fail in production. You'll need a toolkit that supports building responsive, efficient, and scalable services. 
-
-In this workshop, you're going to run through several different technologies that let us have our cake and eat it too. You'll embrace microservices and hopefully make a substantial first step in the right direction towards production. You'll do so in a way that pays down technical debt.
+Microservices also introduce a lot of the complexity implied in building any distributed system. Things will fail in production. In this workshop, you're going to look at different technologies that let us pay down some of the technical complexity and technical debt of scale.
 
 ## Spring Boot: the Service Chassis 
 
