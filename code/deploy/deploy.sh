@@ -87,9 +87,9 @@ function deploy_to_kubernetes() {
   NS=booternetes
   kubectl get ns/$NS || kubectl create ns $NS
 
-  kubectl delete deployments/customers-deployment -n $NS
-  kubectl delete deployments/orders-deployment -n $NS
-  kubectl delete deployments/gateway-deployment -n $NS
+  kubectl delete deployments/customers-deployment -n $NS || echo "could not delete customers-deployment"
+  kubectl delete deployments/orders-deployment -n $NS || echo "could not delete orders-deployment"
+  kubectl delete deployments/gateway-deployment -n $NS || echo "could not delete gateway-deployment"
 
   kubectl apply -f ${START_DIR} -n $NS
 
@@ -101,5 +101,5 @@ function deploy_to_kubernetes() {
 }
 
 #build_containers
-##run_in_docker
+#run_in_docker
 deploy_to_kubernetes

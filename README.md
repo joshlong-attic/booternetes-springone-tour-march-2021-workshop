@@ -1,5 +1,23 @@
 # The Cloud Native Java Workshop for SpringOne Tour 2021 
 
+<!--  
+
+We need: 
+
+ java
+ maven 
+ rsc
+ curl 
+ docker
+ kubectl 
+
+
+-->
+
+<!-- 
+    We might use NOTE: to signal a link that might expand on a given topic, perhaps taking them to a youtube chnnel or somehting
+ -->
+
 > I do not like work even when someone else is doing it. ― Mark Twain
 
 We're with Mr. Twain on this one. We loathe work, especially undifferentiated work. Work that you have to do but that doesn't directly contribute to your project's success, but getting to production today means doing more of it than ever. 
@@ -31,7 +49,6 @@ Chris Richardson coined the pattern _microservice chassis_, whihc basically desc
 Let's stand up a simple service to handle `Customer` data.  
 
 ### The Build
-
 
 We can generate a new project on the Spring INitializr. Specify an `Artifact ID` (`customers`, perhaps?) and then be sure to select `R2DBC`, `Wavefront`, `Reactive Web`, `Actuator`, `Lombok`, `H2`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
 
@@ -81,7 +98,7 @@ There are some things, like the port, and the logical name, that change from one
 
 Let's test it all out. Go to the root of the `custoemrs` code and run: 
 
-"`shell
+```shell
 mvn clean spring-boot:run 
 ```
 
@@ -115,7 +132,10 @@ We love HTTP, broadly, and the REST constraint on HTTP, specifically, as much as
 
 Let's stand up a simple service to handle `Order` data.  
 
-<!-- should we include the discusion around the bounded-ness of the order data to the customer aggregate? -->
+<!--
+
+should we include the discusion around the bounded-ness of the order data to the customer aggregate? 
+-->
 
 ### The Build
 
@@ -251,8 +271,6 @@ Finally, we'll need to stand up an HTTP endpoint that people can use to get the 
 
 // include: code/gateway/src/main/java/com/example/gateway/CustomerOrdersRestController.java
 
-
-
 ### The Configuration 
 
 There are some things, like the port, and the logical name for the `orders` and `customers` services that change from one service to another. This code has default properties (`gateway.orders.hostname-and-port` and `gateway.customers.hostname-and-port`) specified in `application.properites` that work on `localhost`, but that won't work in production. Thankfully, Spring Boot supports 12 factor style configuration. This will make it trivial for us to redefine the default values without recompiling the application binaries in production. We'll use a Kubernetes configmap to override the default value.
@@ -264,20 +282,19 @@ There are some things, like the port, and the logical name for the `orders` and 
 
 Let's test it all out. Go to the root of the `gateway` code and run: 
 
-"`shell
+```shell
 mvn clean spring-boot:run 
 ```
 
 Use the  `curl` CLI  to invoke the `/cos` HTTP endpoint.
 
-"`shell
+```shell
 curl http://localhost:9999/cos 
 ```
 
 You should be staring at a face full of JSON containing both your customer data and the orders for each customers. Congratulations! 
 
-<!-- // todo show the API adapter code  -->
-
+ 
 ## Integrating Observability with the Spring Boot Actuator Module  and Wavefront 
 
 <!-- 
@@ -319,8 +336,12 @@ The builds for all three modules already have Wavefront configured by virtue of 
 
 The log will conain some Spring Boot properties containing a token. You can preserve that and add it to the properties of all the other applications and all the data from all the microservices will henceforth be sent to the same application. 
 
+<!--  could we have them add the properties for wavefront that are dumped in the console to all 3 application.properties? then redeploy -->
+
 You might check out Josh Long, Tanzu Observability Engineering lead Sushant Dewan, and Sr. Product Marketing Manager Gordana Neskovic's webinar on Wavefront [for a more indepth look at using Wavefront and Spring Boot](https://www.brighttalk.com/webcast/14893/413305/tanzu-observability-tips-for-understanding-your-spring-boot-applications). It'll expamnd the picture and illustrate more of the features.
 
+also, they might like this blog written bu tanzu obserability engineer tommy ludwig and josh long [on tracing and metrics]( 
+https://spring.io/blog/2021/02/09/metrics-and-tracing-better-together)
 
 ##  Buildpacks 
 
@@ -355,21 +376,27 @@ and then finally the `gateway` code
 You need to execute `deploy.sh` to get everything installd into a Kubernetes intance. 
 
 ```shell 
-./deploys.sh 
+./deploy.sh 
 ```
 
 You should be able to run the folloowing incantatin to see what all resources have just been created. remember the script crates or assues the availability of a namespace called `booternetes`.
 
-"`shell
+```shell
 kubectl get all -n booternetes 
 ```
 
 You can see what all has been perhaps erroneously added to your Kubernetes cluster with that command. We're interest in the IP address of the `gateway` code. Insepect the `EXTERNAL_IP` value present fir the `gateway` module in the output . Enter that into your browser followed by `/cos` and ou should get the results from both the `orders` and `customers` service.
 
+## Summary 
+<!-- 
+here's what we did 
+ -->
+
 
 ## Next Steps
 
-
+<!-- start.spring.io
+ -->
 
 
 

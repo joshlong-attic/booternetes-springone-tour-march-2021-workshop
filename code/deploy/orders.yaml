@@ -31,7 +31,6 @@ kind: Service
 metadata:
   name: orders-service
 spec:
-  #  type: LoadBalancer
   selector:
     app: orders
   ports:
