@@ -32,7 +32,7 @@ Let's stand up a simple service to handle `Customer` data.
 
 ### The Build
 
-We can generate a new project on the Spring INitializr. Specify an `Artifact ID` (`customers`, perhaps?) and then be sure to select `R2DBC`, `Wavefront`, `Reactive Web`, `Actuator`, `Lombok`, `H2`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
+
 
 
 We'll need to make changes to the Apache Maven build.  

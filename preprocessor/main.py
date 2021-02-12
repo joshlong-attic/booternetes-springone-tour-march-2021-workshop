@@ -12,9 +12,15 @@ if __name__ == '__main__':
 
         def wrap_included_contents(file_path: str, content: str) -> str:
             template = '''
-            ```
-            %s 
-            ```
+            
+            
+```
+
+%s 
+
+```
+
+
             ''' % content
             return template
 
@@ -34,11 +40,12 @@ if __name__ == '__main__':
         md = [l.strip() for l in md]
         new_md = os.linesep.join(md)
 
-        with open(output_markdown_file) as fp:
+        with open(output_markdown_file, 'w') as fp:
             fp.write(new_md)
 
         print('Finished.')
 
 
-
+    readme_dir = os.path.split( sys.argv[0])[1]
+    print (readme_dir)
     process('../README.md', '../README-processed.md')
