@@ -33,7 +33,7 @@ Let's stand up a simple service to handle `Customer` data.
 ### The Build
 
 We can generate a new project on the Spring INitializr. Specify an `Artifact ID` (`customers`, perhaps?) and then be sure to select `R2DBC`, `Wavefront`, `Reactive Web`, `Actuator`, `Lombok`, `H2`, and specify `Java 11`. Click `Generate`. You'll now have a `.zip` file that you can unzip and import into your IDE. 
- 
+
 
 We'll need to make changes to the Apache Maven build.  
 
@@ -66,13 +66,13 @@ We're going to read and write data to a SQL database table called `orders`. The 
 
 And, finally, we want to export an HTTP endpoint, `/customers`. 
 
-// include: code/customers/src/main/java/com/example/customers/CustomersRestController.java
+// include: code/customers/src/main/java/com/example/customers/CustomerRestController.java
 
 ### The Configuration 
 
 Like the port and the logical name, some things change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
 
-// include: code/customers/src/main/resource/application.properties 
+// include: code/customers/src/main/resources/application.properties 
 // todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
 
 ### Go Time 
@@ -85,7 +85,7 @@ mvn clean spring-boot:run
 
 Use the `curl` CLI to invoke the `/customers` HTTP endpoint. 
 
-"`shell
+```shell
 curl http://localhost:8080/customers
 ```
 
@@ -101,11 +101,7 @@ All the code that we'll look at today assumes the use of Reactive Applications.
 
 ## RSocket 
 
-We love HTTP, broadly, and the REST constraint on HTTP, precisely, as much as the next cloud-native. But it's not the only game in town when it comes to high speed, low-latency, highly scalable, interservice communication. There are, among many alternatives like GraphQL, GRPC, and - our perennial favorite - RSocket. RSocket is a binary protocol that reifies the concepts of Reactive Streams in the wire protocol. RSocket understands supports critical components of reactive programming, including _backpressure_, and has ways to communicate that information on the wire itself. The protocol is, of course, platform, language, and payload agnostic. It follows that there is a fantastic Java client written on top of    Project Reactor that we could use independent of Spring, if we were so inclined. But, as luck would have it, Spring already integrates RSocket and provides a component model that makes trivial the work of standing up an RSocket based service. 
-
-
-
-
+We love HTTP, broadly, and the REST constraint on HTTP, precisely, as much as the next cloud-native. But it's not the only game in town when it comes to high speed, low-latency, highly scalable, interservice communication. There are, among many alternatives like GraphQL, GRPC, and - our perennial favorite - RSocket. RSocket is a binary protocol that reifies the concepts of Reactive Streams in the wire protocol. RSocket understands supports critical components of reactive programming, including _backpressure_, and has ways to communicate that information on the wire itself. The protocol is, of course, platform, language, and payload agnostic. It follows that there is a fantastic Java client written on top of    Project Reactor that we could use independent of Spring if we were so inclined. But, as luck would have it, Spring already integrates RSocket and provides a component model that makes trivial the work of standing up an RSocket based service. 
 
 
 ## The Orders Service 
@@ -113,10 +109,10 @@ We love HTTP, broadly, and the REST constraint on HTTP, precisely, as much as th
 
 Let's stand up a simple service to handle `Order` data.  
 
- 
+
 
 ### The Build
- 
+
 We'll need to make changes to the Apache Maven build.  
 
 // include: code/orders/pom.xml 
@@ -146,18 +142,15 @@ We're going to read and write data to a SQL database table called `orders`. The 
 
 And, finally, we want to export an HTTP endpoint, `/orders`. 
 
-// include: code/orders/src/main/java/com/example/orders/OrdersRestController.java
+// include: code/orders/src/main/java/com/example/orders/OrderRSocketController.java 
 
 ### The Configuration 
 
 Like the port and the logical name, some things change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
 
-// include: code/orders/src/main/resource/application.properties 
+// include: code/orders/src/main/resources/application.properties 
 // todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
 
-We want some values only to be active when some condition is met. We were going to use Spring's concept of a profile, a label that - once switched on - could result in some specific configuration being executed or activated. You can use labels to parameterize the runtime environment and execution of the application for different environments (`production`, `staging`, `dev`, etc.). were going to run the `gateway` application with the `SPRING_PROFLES_ACTIVE` environment variable set to `cloud`. Our Spring-based gateway application will start up, see an environment variable signaling that a particular profile should be active, and then load the regular configuration _and_ the profile-specific configuration. In this case, the profile-specific configuration lives in `application-cloud.properties`. 
-
-// include: code/orders/src/main/resource/application-cloud.properties 
 
 
 
@@ -186,7 +179,7 @@ An API does not make a microservice. Each microservice has non-functional requir
 Let's stand up a simple edge service that is part API adapter and part API gateway.
 
 ### The Build
- 
+
 
 We'll need to make changes to the Apache Maven build.  
 
@@ -224,7 +217,7 @@ You can factory those `Route` instances in several different ways. Here, we're g
 
 This class defines one route that matches any request headed to the gateway's host and port (e.g.,: `http://localhost:9999/`). Having a `/c` path forwards the requests to the downstream `customers` service (running on `localhost:8585`). Filters sit in the middle of this exchange and change the request as it goes to the downstream service or the response as it returns from the downstream service.   
 
-An edge-service is also a natural place to introduce client translation logic or client-specific views that require more awareness of the payloads going to and from a particular endpoint.  We will create a new HTTP endpoint (`/cos`) in the `gateway` module that returns the materialized view of the combined data from the RSocket endpoint and the HTTP   endpoint. We'll use reactive programming to handle the scatter-gather service orchestration and composition. The client need never know that the response contains two distinct data sources. Thanks to reactive programming and Project Reactor, we don't need to know that fact either beyond the initial requests themselves. The way we work with both sources of data is through the uniform Reactive Streams types. 
+An edge-service is also a natural place to introduce client translation logic or client-specific views that require more awareness of the payloads going to and from a particular endpoint.  We will create a new HTTP endpoint (`/cos`) in the `gateway` module that returns the materialized view of the combined data from the RSocket endpoint and the HTTP   endpoint. We'll use reactive programming to handle the scatter-gather service orchestration and composition. The client need never know that the response contains two distinct data sources. Thanks to reactive programming and Project Reactor, we don't need to know that fact beyond the initial requests themselves. The way we work with both sources of data is through the uniform Reactive Streams types. 
 
 We'll need to configure two client-like objects to talk to our downstream RSocket and HTTP services. For HTTP, configure an instance of the reactive, non-blocking `WebClient`. For RSocket, we'll configure an example of the reactive, non-blocking `RSocketRequester`. Note that because RSocket communication is truly bidirectional, there's no reason to think of one side as the client and the other the service. Either side of an RSocket connection may act as either a client or a service. So, the object we're using here, which while we'll use it as a _client_, is called an `RSocketRequester`.
 
@@ -236,7 +229,7 @@ We use these two client objects to create a client to our various microservices,
 
 `CrmClient` offers three public methods. The first, `getCustomers`, calls the HTTP service and returns all the `Customer` records. The second method, `getOrdersFor`, returns all the `Order` records for a given `Customer`. The third and final method, `getCustomerOrders`, mixes both of these methods and provides a composite view.
 
-The fourth method, `applySlaDefaults`, uses the operators on `Flux<T>` to apply some useful defaults to all of our reactive streams to gracefully degrade in the face of an exception in the request (`onErrorResume`), use a timeout (`timeout`) and configure that the request should be retried (`retryWhen`) with a growing backoff period between subsequent attempts. 
+The fourth method, `applySlaDefaults`, uses `Flux<T>`'s operators to apply some useful defaults to all of our reactive streams. The stream will degrade gracefully if a request fails (`onErrorResume`). It will use a timeout (`timeout`) to abandon the request after a time interval has elapsed. The stream will retry (`retryWhen`) the request with a growing backoff period between subsequent attempts. 
 
 Finally, we'll need to stand up an HTTP endpoint that people can use to get the materialized view. 
 
@@ -244,10 +237,15 @@ Finally, we'll need to stand up an HTTP endpoint that people can use to get the 
 
 ### The Configuration 
 
- The port and the logical name for the `orders` and `customers` services change from one service to another. This code has default properties (`gateway.orders.hostname-and-port` and `gateway.customers.hostname-and-port`) specified in `application.properties` that work on `localhost`, but that won't work in production. Thankfully, Spring Boot supports [12-factor style configuration](https://12factor.net/config). This will make it trivial to redefine the default values without recompiling the application binaries in production. We'll use a Kubernetes `ConfigMap` to override the default value.
+The port and the logical name for the `orders` and `customers` services change from one service to another. This code has default properties (`gateway.orders.hostname-and-port` and `gateway.customers.hostname-and-port`) specified in `application.properties` that work on `localhost`, but that won't work in production.  Spring Boot supports [12-factor style configuration](https://12factor.net/config), which simplifies redefining default values without recompiling the application binaries in production. We'll use a Kubernetes `ConfigMap` to override the default value.
 
-// include: code/orders/src/main/resource/application.properties 
+// include: code/orders/src/main/resources/application.properties 
 // todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. The gateway aalso has two specific, custom properties, `gateway.orders.hostname-and-port` and `gateway.customers.hostname-and-port`. We'll add all the others later.
+
+We want some values only to be active when some condition is met. We were going to use Spring's concept of a profile, a label that - once switched on - could result in some specific configuration being executed or activated. You can use labels to parameterize the application's runtime environment and execution in different environments (e.g.: `production`, `staging`, `dev`). We will run the `gateway` application with the `SPRING_PROFLES_ACTIVE` environment variable set to `cloud`. Our Spring-based gateway application will start up, see an environment variable signaling that a particular profile should be active, and then load the regular configuration _and_ the profile-specific configuration. In this case, the profile-specific configuration lives in `application-cloud.properties`. 
+
+// include: code/gateway/src/main/resources/application-cloud.properties 
+
 
 ### Go Time 
 
@@ -265,30 +263,35 @@ curl http://localhost:9999/cos
 
 You should be staring at a face full of JSON containing both your customer data and the orders for each customer. Congratulations! 
 
- 
+
 ## Integrating Observability with the Spring Boot Actuator Module  and Wavefront 
 
 <!-- 
-    make sure that they add the following properties to each microservice: 
+make sure that they add the following properties to each microservice: 
 
-    spring.application.name=customers
-    management.endpoints.web.exposure.include=*
-    management.endpoint.health.probes.enabled=true
-    management.endpoint.health.show-details=always
+spring.application.name=customers
+management.endpoints.web.exposure.include=*
+management.endpoint.health.probes.enabled=true
+management.endpoint.health.show-details=always
 
-    Make sure that they're aware that they have Wavefront installed. they can click the link on the console and see reflected in the console information automatically gathered about their application usage
+Make sure that they're aware that they have Wavefront installed. they can click the link on the console and see reflected in the console information automatically gathered about their application usage
 
-    Todo, does the RSocket endpoint register metrics with Actuator as the HTTP endpoint does? I should check that out 
- -->
+Todo, does the RSocket endpoint register metrics with Actuator as the HTTP endpoint does? I should check that out 
+-->
 
 We've sort of eschewed the question of observability. Observability is the idea that we can understand the state of a system by observing its outputs. Observability manifests in the technical choices we make.  
 
 
-For low cardinality data, like the number of requests to a given URL, the number of orders made, the number of customers signed up, etc., metrics are a natural fit. Metrics are just numbers mapped to a logical name. They're statistics - the total, the average, the median value, the 95% percentile, etc. You can use the  [Micrometer](http://micrometer.io) project to capture this kind of data.  Spring Boot's Actuator module integrates Micrometer to capture all sorts of useful metrics out of the box. You can use Micrometer's API to capture even more metrics directly. 
+For low cardinality data, like the number of requests to a given URL, the number of orders made, and the number of customers signed up, metrics are a natural fit. Metrics are just numbers mapped to a logical name. They're statistics like the total, the average, the median value, the 95% percentile. You can use the  [Micrometer](http://micrometer.io) project to capture this kind of data.  Spring Boot's Actuator module integrates Micrometer to capture all sorts of useful metrics out of the box. You can use Micrometer's API to capture even more metrics directly. 
 
-The Spring Boot Actuator is a set of managed endpoints added to a Spring Boot build that exposes useful information about an application, like metrics, health checks, the current environment, etc. Who better to articulate the state of a given service than the service itself, after all?
+The Spring Boot Actuator is a set of managed HTTP endpoints that expose useful information about an application, like metrics, health checks, and the current environment. Who better to articulate the state of a given service than the service itself, after all?
 
-Once added to the `application.properties` files of all three modules, the following properties expand the data exposed from the Actuator endpoints. You can supply this configuration and then visit endpoints like `/actuator/metrics` for the metrics information, `/actuator/health` for the health endpoint, and the liveness and readiness probes for Kubernetes, and `/actuator/env` for the application's environment variables.
+Once added to the `application.properties` files of all three modules, the following properties expand the data exposed from the Actuator endpoints. Once you've applied the configuration, you might want to inspect the following HTTP endpoints:  
+
+ * `/actuator` to see all the available endpoints 
+ * `/actuator/metrics` for the metrics information 
+ * `/actuator/health` for the health endpoint, and the Kubernetes liveness and readiness probes
+ * `/actuator/env` for the application's environment variables.
 
 <!-- something the user can click to add these properties to the `application.properites` fiels of all three modules:
 
@@ -297,17 +300,17 @@ management.endpoint.health.probes.enabled=true
 management.endpoint.health.show-details=always
 management.health.probes.enabled=true
 
- -->
+-->
 
 For high cardinality data, like individualized requests, distributed tracing is a good fit. Distributed traces are just a log of the path a request has taken from one node to another. You can use Spring Cloud Sleuth to capture this kind of data. 
 
-Both Micrometer and Spring Cloud Sleuth are abstractions that talk to various backends. You might use Micrometer to talk to services like Wavefront, DataDog, Prometheus, Graphana. You might use Spring Cloud Sleuth to talk to services like Wavefront, OpenZipkin, Google Cloud Stack Driver Trace. We happen to like VMware's Wavefront because it supports both kinds of data and makes it trivial to cross-reference the distinct types of data. 
+Both Micrometer and Spring Cloud Sleuth are abstractions that work with numerous and diverse backends. You might use Micrometer to talk to services like Wavefront, DataDog, Prometheus, Graphana. Equally, you may use Spring Cloud Sleuth to talk to services like Wavefront, OpenZipkin, and Google Cloud Stack Driver Trace. We happen to like VMware's Wavefront because it supports both kinds of data and makes it trivial to cross-reference the distinct types of data. 
 
-The builds for all three modules already have Wavefront configured by the Wavefront Spring Boot starter already on the classpath. And that's it. Look at the logs of one of your applications running on your local machine, and you'll be given a URL you can click. Please copy and paste the URL and paste it into a browser or click it. You'll end up in a freemium Wavefront account complete with a `Spring Boot Dashboard` dashboard highlighting data that would be useful coming from a Spring Boot application. Drive a few requests in the application and then wait a few minutes. The first few requests take a while to percolate into the system. They'll get there. 
+The builds for all three modules have Wavefront configured by the Wavefront Spring Boot starter already on the classpath. And that's it. Look at the logs of one of your applications running on your local machine, and you'll see a URL you can click. Please copy and paste the URL and paste it into a browser or click it. You'll end up in a freemium Wavefront account complete with a `Spring Boot Dashboard` dashboard highlighting data that would be useful coming from a Spring Boot application. Drive a few requests in the application and then wait a few minutes. The first few requests take a while to percolate into the system. They'll get there. 
 
 The log output will contain some Spring Boot properties containing a token.  Preserve those configuration values and add them to the property files for all of the other applications. Restart the applications, and you'll see the data in the dashboard.
 
-<!--  could we have them add the properties for Wavefront that are dumped in the console to all three application.properties? then redeploy -->
+<!--  could we have them add those properties dumped in the console to all three application.properties? then redeploy -->
 
 You might check out Josh Long, Tanzu Observability Engineering leader   Sushant Dewan, and Sr. Product Marketing Manager Gordana Neskovic's webinar on [Wavefront and Spring Boot](https://www.brighttalk.com/webcast/14893/413305/tanzu-observability-tips-for-understanding-your-spring-boot-applications). 
 
@@ -326,11 +329,11 @@ We'll use [buildpacks](https://buildpacks.io/) to transform your application sou
 
 We've now got three applications deployed as containers. Let's run them. We could craft a ton of YAML and then apply that. Still, there's not all that much excitement about our containers, so we'll use a few `kubectl` shortcuts to get a container up and running in production in no time. The only wrinkle is that our applications will need to change specific values based on environment variables in the container.
 
-We've written a shell script that, in turn, executes everything required to deploy this application to production. 
+We've written a shell script that executes everything required to deploy this application to production. 
 
 // include: code/deploy/deploy.sh 
 
-This, in turn, applies three different Kubernetes configuration files, `customers.yaml`, `orders.yaml`, and `gateway.yaml`. 
+In turn, the script applies three different Kubernetes configuration files, `customers.yaml`, `orders.yaml`, and `gateway.yaml`. 
 
 Here are those files. First, we'll look at the `orders` service.
 
@@ -360,13 +363,13 @@ You can see what all has been perhaps erroneously added to your Kubernetes clust
 ## Summary 
 <!-- 
 here's what we did 
- -->
+-->
 
 
 ## Next Steps
 
 <!-- start.spring.io
- -->
+-->
 
 
 
