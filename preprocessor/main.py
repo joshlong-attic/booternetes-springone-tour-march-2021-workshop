@@ -1,9 +1,9 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3
 import os, sys, time, re
 
 if __name__ == '__main__':
 
-    def process(markdown_file: str) -> str:
+    def process(markdown_file: str, output_markdown_file: str) -> str:
 
         dir_of_readme = os.path.split(markdown_file)[0]
         dir_of_readme = os.path.abspath(dir_of_readme)
@@ -33,7 +33,12 @@ if __name__ == '__main__':
         md = [handle_includes(l) for l in open(markdown_file).readlines()]
         md = [l.strip() for l in md]
         new_md = os.linesep.join(md)
-        print(new_md)
+
+        with open(output_markdown_file) as fp:
+            fp.write(new_md)
+
+        print('Finished.')
 
 
-    process('../README.md')
+
+    process('../README.md', '../README-processed.md')
