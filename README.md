@@ -4,47 +4,39 @@
 
 We're with Mr. Twain on this one. We loathe work, especially undifferentiated work.  Work that you have to do but that doesn't directly contribute to your project's success is undifferentiated work, and getting to production today means doing more of it than ever. 
 
-When we talk about _cloud native computing_, it refers not to any single technology but more to an approach that optimizes for frequent and fast releases, and the speed of iteration, and release. Faster organizations learn and grow faster. There are many work queues for each new production release, which must be done and take wall-clock time. Some things like integration and integration testing must happen serially, after all the contributions to the codebase settle. At the same time, a team may do other items in parallel. The smaller the size of the codebase, the more quickly all the serialized work finishes. The goal is to do as much work in parallel and reduce the amount of serialized work, to reduce wall clock time between releases.  
+When we talk about _cloud native computing_, it refers not to any single technology but more to an approach that optimizes for frequent and fast releases, and the speed of iteration. Faster organizations learn and grow faster. There are many work queues for each new production release, which must be done and take wall-clock time. Some things like integration and integration testing must happen serially, after all the contributions to the codebase settle, while other work may be done concurrently. The smaller the size of the codebase, the more quickly all the serialized work finishes. The goal is to do as much work in parallel and reduce the amount of serialized work, to reduce wall clock time between releases. Microservices, with their smaller codebases and smaller teams, reduce the wall clock time between having an idea and seeing it deployed into production. 
 
 Microservices are not without costs. 
 
 In the world of microservices, the rare work  (tedium!) of addressing non-functional requirements like security, rate limiting, observability, routing, containers, virtual machines, and cloud infrastructure has become an ongoing struggle that bedevils every new microservice. 
 
-Microservices also introduce a lot of the complexity implied in building any distributed system. Things will fail in production. In this workshop, you're going to look at different technologies that let us pay down some of the technical complexity and technical debt of scale.
+Microservices  introduce a lot of the complexity implied in building any distributed system. Things will fail in production at sufficient scale. In this workshop, you're going to look at different technologies that let us pay down some of the technical complexity and technical debt of scale.
 
 ## Spring Boot: the Service Chassis 
 
-You're going to build three microservices: two APIs and one API gateway. The two APIs will be technically very similar to each other. One microservice, the `customers` application, manages `Customer` data. The other microservice, the `orders` application, manages `Order` data. 
+You're going to build three microservices: two APIs and one API gateway. The two APIs will be technically very similar to each other. One microservice, the `customers` application, manages `Customer` data. The other microservice, the `orders` application, manages `Order` data. The `gateway` acts as a proxy and an edge service and addresses cross cutting concerns.
 
 NOTE: There's a strong case that `order` data is part of the `customer` aggregate.  I always like to imagine something like an `order` would endure even if the `customer` were to delete their records and orphan somehow the `orders`  for revenue recognition purposes and fiscal reporting requirements. It would make more sense to tombstone the `order`, wouldn't it? This thinking informs why we've teased this domain into two different microservices. 
 
-Through consistency comes velocity. We'll use Spring Boot to code-generate a brand new Java-based application with consistent defaults and easy-to-override features. Spring Boot is an opinionated approach to the Java ecosystem. You may opt-in to a more automatic configuration ("auto-config") by adding so-called "starter" dependencies to the build. The mere presence of these starter dependencies introduces convenient, sensibly defaulted behavior to an application. 
+Through consistency comes velocity. Spring Boot is an opinionated approach to the Java ecosystem that provides consistent defaults and easy-to-override features. We'll use Spring Boot to build a new Java application. You opt-in to a default configuration ("auto-config") for a particular feature (serving HTTP endpoints, data access, security, etc.) by adding so-called "starter" dependencies to the build. The mere presence of these starter dependencies on the classpath activates default features in the application.
 
-Chris Richardson coined the pattern _microservice chassis_. A microservice chassis describes an opinionated, automatic framework like Spring Boot that reduces cross-cutting concerns for each new application. 
+Chris Richardson coined the pattern _microservice chassis_ to describe an opinionated, automatic framework like Spring Boot that reduces concerns for each new application. 
 
 ## The Customer Service 
 
-Let's stand up a simple service to handle `Customer` data.  
+Let's stand up a simple service to handle `Customer` data. 
 
 ### The Build
 
-
-
-
-We'll need to make changes to the Apache Maven build.  
+We will change to the Apache Maven build.  
 
 // include: code/orders/pom.xml 
 
 This build includes dependencies for   `R2DBC`, the  `Wavefront` observability platform, `Reactive Web`, `Actuator`, `Lombok`, the `H2`, and `Java 11`.
 
-
-
-
 ### The Java Code 
 
-We'll need to make changes to the Java code. There are a few exciting players here. 
-
-The application is a Spring Boot application, so we'll need the entry point class.
+Let's look at the Java code. There are a few exciting players here. We'll need an entry point class.
 
 // include: code/orders/src/main/java/com/example/orders/OrdersApplication.java
 
@@ -52,7 +44,7 @@ We're going to read and write data to a SQL database table called `orders`. We'l
 
 // include: code/orders/src/main/java/com/example/orders/Order.java
 
-And we'll need a Spring Data repository.
+We'll need a Spring Data repository.
 
 // include: code/orders/src/main/java/com/example/orders/OrderRepository.java
 
@@ -66,38 +58,48 @@ And, finally, we want to export an HTTP endpoint, `/customers`.
 
 ### The Configuration 
 
-Like the port and the logical name, some things change from one service to another. We can spell those values out in properties in the application's `application.properties`. 
+Like the port and the logical name, some things change from one service to another. We will specify these values in the application's `application.properties`. 
 
 // include: code/customers/src/main/resources/application.properties 
-// todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later.
+
+<!-- todo how do we add only two properties from that file, `server.port`, and `spring.application.name`. We'll add all the others later. -->
 
 ### Go Time 
 
-Let's test it all out. Go to the root of the `customers` code and run: 
+Let's test it all out. Go to the root of the `customers`  code and run: 
 
 ```shell
-mvn clean spring-boot:run 
+mvn -f pom.xml clean spring-boot:run 
 ```
 
-Use the `curl` CLI to invoke the `/customers` HTTP endpoint. 
+Use the `curl` CLI to invoke the `/customers` HTTP endpoint and confirm that you're given some data in response. 
 
 ```shell
 curl http://localhost:8080/customers
 ```
 
-## Reactive Programming 
-
-This application uses reactive programming, which you may note from the `Flux<T>`, `Mono<T>` and `Publisher<T>` types strewn about the codebase. These types are a sort of inverted `Collection<T>`. Instead of pulling data out of the collection to _pull_ the data out of it when you want it, the data is _pushed_ to you when the data is ready. This inverted approach means that Spring Webflux, the reactive web framework that we're using, does not need to wait for an asynchronous value of a stream of values to resolve. It can ask for it and then carry on doing other work until the results arrive. No thread is ever parked - _idle_ -  waiting for data to arrive, which means the runtime can repurpose those threads to achieve much better scalability. In the cloud, scalability means less hardware being used to do the same job, translating into reduced data center spend. Scalability is a _good thing_ (TM). 
-
-Reactive Programming also gives us two other significant benefits: ease of composition and robustness. You see, reactive programming forces us to think of everything in terms of the Reactive Streams types like `Publisher<T>`. The [Reactor Project](https://projectreactor.io/) builds upon the Reactive Streams specification. It provides two specializations, `Flux<T>` (a container type for `0..N` values of type `T`) and `Mono<T>` (a container type for at-most one value). All reactive Spring APIs use these types. Types from `org.reactivestreams.*` are the Reactive Streams specification. In the Reactive Streams specification, a reactive stream `Publisher<T>` publishes data asynchronously. A `Subscriber<T>` consumes data from a `Publisher<T>`. A `Subscriber<T>` may request more   data, or cancel the data altogether, from  the `Publisher<T>` by using the `Subscription<T>` 
 
 The code showcases several interesting elements. `Customer` is an entity object that maps to data read from the in-memory SQL database, H2. The `CustomerRepository` is a Spring Data repository that allows us to read and write entity data. `CustomersListener` installs some sample data into the database when the application starts up. `CustomerRestController` describes an HTTP endpoint, `/customers`. 
 
-All the code that we'll look at today assumes the use of Reactive Applications. 
+
+
+## Reactive Programming 
+
+This application uses [reactive programming](https://spring.io/reactive), which you may recognize from the telltale `Flux<T>`, `Mono<T>` and `Publisher<T>` types strewn about the codebase. Reactive programming requires the [the Reactive Streams](http://www.reactive-streams.org) specification.  From the website: "Reactive Streams project is an initiative to provide a standard for asynchronous stream processing with non-blocking backpressure."
+
+The [Reactor Project](https://projectreactor.io/) builds upon the Reactive Streams specification. It provides two specializations, `Flux<T>` (a container type for `0..N` values of type `T`) and `Mono<T>` (a container type for at-most one value). Types from `org.reactivestreams.*` are the Reactive Streams specification. In the Reactive Streams specification, a reactive stream `Publisher<T>` publishes data asynchronously. A `Subscriber<T>` consumes data from a `Publisher<T>`. A `Subscriber<T>` may request more data, or cancel the data altogether, using the `Subscriber<T>`. The `Subscriber<T>` regulates the flow of data; it supports flow control. Flow control is sometimes interchangeably referred to as _backpressure_.
+
+The Reactive Streams `Publisher<T>` are a sort of inverted `Collection<T>`. Instead of pulling data out of the collection when you want it, the data is _pushed_ to you when the data is ready. The inverted approach supports better **scalability**; it means that [Spring Webflux](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html), the reactive web framework that we're using, does not need to wait for an asynchronous value, or a stream of values, to resolve. The runtime can carry on doing other work while results arrive. No thread is ever parked - _idle_ -  waiting for data to arrive, which means the runtime can repurpose those threads to handle other work, resulting in better scalability. In the cloud, scalability means less hardware being used to do the same job, translating into reduced data center spend. Scalability is a _Good Thing_. 
+
+<!-- Reactive Programming gives ease of composition. and robustness  -->
+
+Reactive programming simplifies the work of **composition and integration**. All reactive Spring APIs use these Reactive Streams and Reactor types. Spring Webflux, Spring Integration, Spring Security, Spring Data, Spring Cloud, Spring Boot, Spring Framework, and other projects we've surely forgotten all support reactive programming. And, because this is a de-facto standard, you can interoperate with other projects like RxJava, Akka Streams, Vert.x, or any other library that produces and consumes `Publisher<T>`s. It is possible to adapt `CompletableFuture<T>`, `Thread`, `Collection<T>`, arrays, `Iterable<T>`, and other types to Reactive Streams types, simplifying their composition. 
+
+Things fail on the network. Statistically, the larger the surface area of your system, the more likely some part of it will eventually fail. Reactive programming acknowledges that reality and strives to improve the *robustness* of our code, providing operators to support retries, timeouts, error handling, and more.
 
 ## RSocket 
 
-We love HTTP, broadly, and the REST constraint on HTTP, precisely, as much as the next cloud-native. But it's not the only game in town when it comes to high speed, low-latency, highly scalable, interservice communication. There are, among many alternatives like GraphQL, GRPC, and - our perennial favorite - RSocket. RSocket is a binary protocol that reifies the concepts of Reactive Streams in the wire protocol. RSocket understands supports critical components of reactive programming, including _backpressure_, and has ways to communicate that information on the wire itself. The protocol is, of course, platform, language, and payload agnostic. It follows that there is a fantastic Java client written on top of    Project Reactor that we could use independent of Spring if we were so inclined. But, as luck would have it, Spring already integrates RSocket and provides a component model that makes trivial the work of standing up an RSocket based service. 
+While we love HTTP, broadly, and the REST constraint on HTTP, specifically, as much as the next cloud-native, it's not the only game in town when it comes to high speed, low-latency, highly scalable, interservice communication. There are many alternatives like GraphQL, GRPC, and - our perennial favorite - RSocket. RSocket is a binary protocol that reifies the concepts of the  Reactive Streams in the wire protocol. RSocket understands supports critical components of reactive programming, including _backpressure_, and has ways to communicate that information on the wire itself. The protocol is, of course, platform, language, and payload agnostic. It follows that there is a fantastic Java client written on top of Project Reactor that we could use independent of Spring if we were so inclined. But, as luck would have it, Spring already integrates RSocket and provides a component model that makes trivial the work of standing up an RSocket based service. 
 
 
 ## The Orders Service 
@@ -117,9 +119,7 @@ This build includes dependencies for   `R2DBC`, the `Wavefront` observability pl
 
 ### The Java Code 
 
-We'll need to make changes to the Java code. There are a few exciting players here. 
-
-The application is a Spring Boot application, so we'll need the entry point class.
+Let's look at the Java code. There are a few exciting players here. We'll need an entry point class.
 
 // include: code/orders/src/main/java/com/example/orders/OrdersApplication.java
 
@@ -185,9 +185,7 @@ This build includes dependencies for the `Wavefront` observability platform, `RS
 
 ### The Java Code 
 
-We'll need to make changes to the Java code. There are a few exciting players here. 
-
-The application is a Spring Boot application, so we'll need the entry point class.
+Let's look at the Java code. There are a few exciting players here. We'll need an entry point class.
 
 // include: code/gateway/src/main/java/com/example/gateway/GatewayApplication.java
 
