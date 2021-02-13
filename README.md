@@ -376,7 +376,7 @@ Isn't that satisfying? We got something up and running in 90 minutes. We've only
 
 ## Next Steps
 
-We've tried to link to some content you might find useful where, on occasion, we felt it reasonable to do so. You should remember to clean up the resources you're using in your Kubernetes cluster. 
+We've tried to link to some additional content you might find useful where, on occasion, we felt it reasonable to do so. You should remember to clean up the resources you're using in your Kubernetes cluster. 
 
 
 ```shell 
